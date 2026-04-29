@@ -222,11 +222,34 @@ export default function App() {
         const recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = true;
-        // continuous:false is far more reliable on Android Chrome.
-        // We manually restart in onend to keep listening indefinitely.
         recognition.continuous = false;
 
         let sessionFinal = '';
+
+        // Android Chrome re-sends the ENTIRE utterance from session start in
+        // each new recognition instance (cumulative transcript). So "I'm pretty"
+        // in session 2 already includes "I'm" from session 1.
+        // Strategy: if the new text starts with what we already have, replace
+        // the accumulator rather than appending to it.
+        const mergeIntoAccum = (newText: string) => {
+          if (!newText) return;
+          const base = dictationAccumRef.current.trimEnd();
+          const incoming = newText.trim();
+          if (!base || incoming.toLowerCase().startsWith(base.toLowerCase())) {
+            dictationAccumRef.current = incoming + ' ';
+          } else {
+            dictationAccumRef.current = base + ' ' + incoming + ' ';
+          }
+        };
+
+        const displayText = (sfAndInterim: string): string => {
+          const base = dictationAccumRef.current.trimEnd();
+          const incoming = sfAndInterim.trim();
+          if (base && incoming.toLowerCase().startsWith(base.toLowerCase())) {
+            return sfAndInterim;
+          }
+          return dictationAccumRef.current + sfAndInterim;
+        };
 
         recognition.onresult = (event: any) => {
           sessionFinal = '';
@@ -238,7 +261,7 @@ export default function App() {
               interim = event.results[i][0].transcript;
             }
           }
-          setInputText(dictationAccumRef.current + sessionFinal + interim);
+          setInputText(displayText(sessionFinal + interim));
         };
 
         recognition.onerror = (event: any) => {
@@ -249,8 +272,7 @@ export default function App() {
         };
 
         recognition.onend = () => {
-          // Commit this session's final text, then restart if still active
-          dictationAccumRef.current += sessionFinal;
+          mergeIntoAccum(sessionFinal);
           if (dictatingActiveRef.current) {
             recognitionRef.current = startDictation();
           } else {
@@ -336,11 +358,34 @@ export default function App() {
         const recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = true;
-        // continuous:false is far more reliable on Android Chrome.
-        // We manually restart in onend to keep recording indefinitely.
         recognition.continuous = false;
 
         let sessionFinal = '';
+
+        // Android Chrome re-sends the ENTIRE utterance from session start in
+        // each new recognition instance (cumulative transcript). So "I'm pretty"
+        // in session 2 already includes "I'm" from session 1.
+        // Strategy: if the new text starts with what we already have, replace
+        // the accumulator rather than appending to it.
+        const mergeIntoAccum = (newText: string) => {
+          if (!newText) return;
+          const base = recordingAccumRef.current.trimEnd();
+          const incoming = newText.trim();
+          if (!base || incoming.toLowerCase().startsWith(base.toLowerCase())) {
+            recordingAccumRef.current = incoming + ' ';
+          } else {
+            recordingAccumRef.current = base + ' ' + incoming + ' ';
+          }
+        };
+
+        const displayText = (sfAndInterim: string): string => {
+          const base = recordingAccumRef.current.trimEnd();
+          const incoming = sfAndInterim.trim();
+          if (base && incoming.toLowerCase().startsWith(base.toLowerCase())) {
+            return sfAndInterim;
+          }
+          return recordingAccumRef.current + sfAndInterim;
+        };
 
         recognition.onresult = (event: any) => {
           sessionFinal = '';
@@ -352,7 +397,7 @@ export default function App() {
               interim = event.results[i][0].transcript;
             }
           }
-          setTranscript(recordingAccumRef.current + sessionFinal + interim);
+          setTranscript(displayText(sessionFinal + interim));
         };
 
         recognition.onerror = (event: any) => {
@@ -363,8 +408,7 @@ export default function App() {
         };
 
         recognition.onend = () => {
-          // Commit this session's final text, then restart if still active
-          recordingAccumRef.current += sessionFinal;
+          mergeIntoAccum(sessionFinal);
           if (recordingActiveRef.current) {
             recognitionRef.current = startRecording();
           } else {
