@@ -224,11 +224,18 @@ export default function App() {
         recognition.interimResults = true;
         recognition.continuous = true;
 
+        // lastFinalIndex tracks which results are already committed.
+        // Android Chrome incorrectly sets resultIndex=0 even for already-final
+        // results, causing duplicates. We guard against that here.
+        let lastFinalIndex = -1;
         recognition.onresult = (event: any) => {
           let interim = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
+          for (let i = 0; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
-              dictationAccumRef.current += event.results[i][0].transcript;
+              if (i > lastFinalIndex) {
+                dictationAccumRef.current += event.results[i][0].transcript;
+                lastFinalIndex = i;
+              }
             } else {
               interim += event.results[i][0].transcript;
             }
@@ -332,11 +339,18 @@ export default function App() {
         recognition.interimResults = true;
         recognition.continuous = true;
 
+        // lastFinalIndex tracks which results are already committed.
+        // Android Chrome incorrectly sets resultIndex=0 even for already-final
+        // results, causing duplicates. We guard against that here.
+        let lastFinalIndex = -1;
         recognition.onresult = (event: any) => {
           let interim = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
+          for (let i = 0; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
-              recordingAccumRef.current += event.results[i][0].transcript;
+              if (i > lastFinalIndex) {
+                recordingAccumRef.current += event.results[i][0].transcript;
+                lastFinalIndex = i;
+              }
             } else {
               interim += event.results[i][0].transcript;
             }
