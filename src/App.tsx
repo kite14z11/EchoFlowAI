@@ -113,6 +113,10 @@ export default function App() {
 
   // Speech Recognition
   const recognitionRef = useRef<any>(null);
+  const recordingActiveRef  = useRef(false);
+  const recordingAccumRef   = useRef('');
+  const dictatingActiveRef  = useRef(false);
+  const dictationAccumRef   = useRef('');
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -199,6 +203,7 @@ export default function App() {
 
   const toggleScriptDictation = () => {
     if (isDictatingScript) {
+      dictatingActiveRef.current = false;
       recognitionRef.current?.stop();
       setIsDictatingScript(false);
     } else {
@@ -209,31 +214,49 @@ export default function App() {
         alert("Your browser does not support Speech Recognition.");
         return;
       }
-      
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.interimResults = true;
-      recognition.continuous = true;
 
-      let accumulatedDictation = '';
-      recognition.onresult = (event: any) => {
-        let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            accumulatedDictation += event.results[i][0].transcript;
-          } else {
-            interim += event.results[i][0].transcript;
+      dictationAccumRef.current = '';
+      dictatingActiveRef.current = true;
+
+      const startDictation = (): any => {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        recognition.onresult = (event: any) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              dictationAccumRef.current += event.results[i][0].transcript;
+            } else {
+              interim += event.results[i][0].transcript;
+            }
           }
-        }
-        setInputText(accumulatedDictation + interim);
+          setInputText(dictationAccumRef.current + interim);
+        };
+
+        recognition.onerror = (event: any) => {
+          if (event.error !== 'no-speech' && event.error !== 'aborted') {
+            dictatingActiveRef.current = false;
+            setIsDictatingScript(false);
+          }
+        };
+
+        // Android Chrome stops continuous recognition on silence → restart
+        recognition.onend = () => {
+          if (dictatingActiveRef.current) {
+            recognitionRef.current = startDictation();
+          } else {
+            setIsDictatingScript(false);
+          }
+        };
+
+        recognition.start();
+        return recognition;
       };
 
-      recognition.onend = () => {
-        setIsDictatingScript(false);
-      };
-
-      recognition.start();
-      recognitionRef.current = recognition;
+      recognitionRef.current = startDictation();
       setIsDictatingScript(true);
     }
   };
@@ -290,6 +313,7 @@ export default function App() {
 
   const toggleRecording = () => {
     if (isRecording) {
+      recordingActiveRef.current = false;
       recognitionRef.current?.stop();
       setIsRecording(false);
     } else {
@@ -298,31 +322,49 @@ export default function App() {
         alert("Your browser does not support Speech Recognition.");
         return;
       }
-      
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.interimResults = true;
-      recognition.continuous = true;
 
-      let accumulatedTranscript = '';
-      recognition.onresult = (event: any) => {
-        let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            accumulatedTranscript += event.results[i][0].transcript;
-          } else {
-            interim += event.results[i][0].transcript;
+      recordingAccumRef.current = '';
+      recordingActiveRef.current = true;
+
+      const startRecording = (): any => {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        recognition.onresult = (event: any) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              recordingAccumRef.current += event.results[i][0].transcript;
+            } else {
+              interim += event.results[i][0].transcript;
+            }
           }
-        }
-        setTranscript(accumulatedTranscript + interim);
+          setTranscript(recordingAccumRef.current + interim);
+        };
+
+        recognition.onerror = (event: any) => {
+          if (event.error !== 'no-speech' && event.error !== 'aborted') {
+            recordingActiveRef.current = false;
+            setIsRecording(false);
+          }
+        };
+
+        // Android Chrome stops on silence → restart to keep recording
+        recognition.onend = () => {
+          if (recordingActiveRef.current) {
+            recognitionRef.current = startRecording();
+          } else {
+            setIsRecording(false);
+          }
+        };
+
+        recognition.start();
+        return recognition;
       };
 
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognition.start();
-      recognitionRef.current = recognition;
+      recognitionRef.current = startRecording();
       setIsRecording(true);
       setTranscript('');
       setFeedback('');
