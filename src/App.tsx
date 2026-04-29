@@ -222,27 +222,23 @@ export default function App() {
         const recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = true;
-        recognition.continuous = true;
+        // continuous:false is far more reliable on Android Chrome.
+        // We manually restart in onend to keep listening indefinitely.
+        recognition.continuous = false;
 
-        // lastFinalIndex tracks which results are already committed.
-        // Android Chrome incorrectly sets resultIndex=0 even for already-final
-        // results, causing duplicates. We guard against that here.
-        let lastFinalIndex = -1;
+        let sessionFinal = '';
+
         recognition.onresult = (event: any) => {
+          sessionFinal = '';
           let interim = '';
-          for (let i = 0; i < event.results.length; i++) {
+          for (let i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
-              if (i > lastFinalIndex) {
-                dictationAccumRef.current += event.results[i][0].transcript;
-                lastFinalIndex = i;
-              }
+              sessionFinal += event.results[i][0].transcript;
             } else {
-              // Use = not += : Android Chrome adds a new entry per interim
-              // update of the same phrase, so we only want the latest one.
               interim = event.results[i][0].transcript;
             }
           }
-          setInputText(dictationAccumRef.current + interim);
+          setInputText(dictationAccumRef.current + sessionFinal + interim);
         };
 
         recognition.onerror = (event: any) => {
@@ -252,8 +248,9 @@ export default function App() {
           }
         };
 
-        // Android Chrome stops continuous recognition on silence → restart
         recognition.onend = () => {
+          // Commit this session's final text, then restart if still active
+          dictationAccumRef.current += sessionFinal;
           if (dictatingActiveRef.current) {
             recognitionRef.current = startDictation();
           } else {
@@ -339,27 +336,23 @@ export default function App() {
         const recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = true;
-        recognition.continuous = true;
+        // continuous:false is far more reliable on Android Chrome.
+        // We manually restart in onend to keep recording indefinitely.
+        recognition.continuous = false;
 
-        // lastFinalIndex tracks which results are already committed.
-        // Android Chrome incorrectly sets resultIndex=0 even for already-final
-        // results, causing duplicates. We guard against that here.
-        let lastFinalIndex = -1;
+        let sessionFinal = '';
+
         recognition.onresult = (event: any) => {
+          sessionFinal = '';
           let interim = '';
-          for (let i = 0; i < event.results.length; i++) {
+          for (let i = event.resultIndex; i < event.results.length; i++) {
             if (event.results[i].isFinal) {
-              if (i > lastFinalIndex) {
-                recordingAccumRef.current += event.results[i][0].transcript;
-                lastFinalIndex = i;
-              }
+              sessionFinal += event.results[i][0].transcript;
             } else {
-              // Use = not += : Android Chrome adds a new entry per interim
-              // update of the same phrase, so we only want the latest one.
               interim = event.results[i][0].transcript;
             }
           }
-          setTranscript(recordingAccumRef.current + interim);
+          setTranscript(recordingAccumRef.current + sessionFinal + interim);
         };
 
         recognition.onerror = (event: any) => {
@@ -369,8 +362,9 @@ export default function App() {
           }
         };
 
-        // Android Chrome stops on silence → restart to keep recording
         recognition.onend = () => {
+          // Commit this session's final text, then restart if still active
+          recordingAccumRef.current += sessionFinal;
           if (recordingActiveRef.current) {
             recognitionRef.current = startRecording();
           } else {
