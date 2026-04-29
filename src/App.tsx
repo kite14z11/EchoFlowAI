@@ -215,12 +215,17 @@ export default function App() {
       recognition.interimResults = true;
       recognition.continuous = true;
 
+      let accumulatedDictation = '';
       recognition.onresult = (event: any) => {
-        const results = Array.from(event.results);
-        const dictationText = results
-          .map((result: any) => result[0].transcript)
-          .join('');
-        setInputText(dictationText);
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            accumulatedDictation += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        setInputText(accumulatedDictation + interim);
       };
 
       recognition.onend = () => {
@@ -299,12 +304,17 @@ export default function App() {
       recognition.interimResults = true;
       recognition.continuous = true;
 
+      let accumulatedTranscript = '';
       recognition.onresult = (event: any) => {
-        const results = Array.from(event.results);
-        const finalTranscript = results
-          .map((result: any) => result[0].transcript)
-          .join('');
-        setTranscript(finalTranscript);
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            accumulatedTranscript += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        setTranscript(accumulatedTranscript + interim);
       };
 
       recognition.onend = () => {
