@@ -237,7 +237,9 @@ export default function App() {
                 lastFinalIndex = i;
               }
             } else {
-              interim += event.results[i][0].transcript;
+              // Use = not += : Android Chrome adds a new entry per interim
+              // update of the same phrase, so we only want the latest one.
+              interim = event.results[i][0].transcript;
             }
           }
           setInputText(dictationAccumRef.current + interim);
@@ -352,7 +354,9 @@ export default function App() {
                 lastFinalIndex = i;
               }
             } else {
-              interim += event.results[i][0].transcript;
+              // Use = not += : Android Chrome adds a new entry per interim
+              // update of the same phrase, so we only want the latest one.
+              interim = event.results[i][0].transcript;
             }
           }
           setTranscript(recordingAccumRef.current + interim);
