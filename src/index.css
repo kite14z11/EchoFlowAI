@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  color-scheme: light;
+  --primary: #3b82f6;
+  --primary-light: #eff6ff;
+  --bg: #f8fafc;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --accent-red: #ef4444;
+  --accent-green: #22c55e;
+  --card: #ffffff;
+}
+
+body {
+  @apply antialiased bg-[#f8fafc] text-[#1e293b];
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* Sleek Interface Theme Classes */
+.comparison-card {
+  @apply bg-white rounded-[16px] p-8 shadow-sm border border-[#e2e8f0] flex flex-col;
+}
+
+.section-label {
+  @apply text-[12px] font-bold uppercase tracking-[0.05em] text-[#64748b] mb-3;
+}
+
+.text-display {
+  @apply text-[18px] leading-relaxed text-[#1e293b] bg-[#fafafa] p-5 rounded-[12px] border border-dashed border-[#e2e8f0] mb-6 flex-1;
+}
+
+.result-display {
+  @apply text-[18px] leading-relaxed p-5 rounded-[12px] bg-white border border-[#e2e8f0] flex-1;
+}
+
+.feedback-panel {
+  @apply bg-[#eff6ff] rounded-[16px] p-6 border border-[#3b82f6] flex flex-col;
+}
+
+.score-box {
+  @apply text-center mb-5;
+}
+
+.score-value {
+  @apply text-[48px] font-extrabold text-[#3b82f6];
+}
+
+.score-label {
+  @apply text-[14px] text-[#64748b];
+}
+
+.advice-item {
+  @apply mb-4 text-[13px] leading-relaxed;
+}
+
+.advice-item b {
+  @apply block mb-1 text-[#3b82f6];
+}
+
+.setting-group {
+  @apply flex flex-col gap-1;
+}
+
+.setting-group label {
+  @apply text-[11px] font-bold text-[#64748b];
+}
+
+.setting-group select {
+  @apply px-3 py-2 rounded-lg border border-[#e2e8f0] bg-white text-[13px] outline-none;
+}
+
+.btn-mic {
+  @apply w-14 h-14 rounded-full bg-[#3b82f6] text-white flex items-center justify-center border-none cursor-pointer;
+  box-shadow: 0 10px 15px -3px rgba(59,130,246,0.3);
+}
+
+.btn-tts {
+  @apply px-6 py-3 rounded-full bg-white border-2 border-[#3b82f6] text-[#3b82f6] font-bold cursor-pointer transition-all hover:bg-[#3b82f6] hover:text-white mb-0;
+}
+
+/* Diff Styling */
+.diff-added {
+  @apply text-[#ef4444] underline decoration-wavy font-bold italic;
+}
+
+.diff-removed {
+  @apply text-[#64748b] line-through opacity-50;
+}
+
+.diff-correct {
+  @apply text-[#22c55e];
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[#e2e8f0] rounded-full hover:bg-[#cbd5e1] transition-colors;
+}

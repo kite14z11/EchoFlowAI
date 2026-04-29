@@ -1,0 +1,8 @@
+{
+  "name": "EchoSpeech - 英語スピーチトレーニング",
+  "description": "AIがあなたの英語スピーチを解析・評価するパーソナルトレーニングアプリ。TTSでのリスニング、録音によるスピーキング比較、Geminiによる改善指導で着実な進歩をサポート。",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": []
+}

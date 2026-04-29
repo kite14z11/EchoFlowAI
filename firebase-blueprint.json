@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "Session": {
+      "title": "Speech Training Session",
+      "description": "A single speech practice session containing original text, recording transcript, and AI feedback.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "originalText": { "type": "string" },
+        "transcript": { "type": "string" },
+        "feedback": { "type": "string" },
+        "score": { "type": "number" },
+        "practiceItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": { "type": "string" },
+              "type": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        },
+        "voiceSettings": {
+          "type": "object",
+          "properties": {
+            "voiceName": { "type": "string" },
+            "gender": { "type": "string" },
+            "tone": { "type": "string" },
+            "speed": { "type": "number" }
+          }
+        }
+      },
+      "required": ["userId", "title", "date", "originalText"]
+    }
+  },
+  "firestore": {
+    "/sessions/{sessionId}": {
+      "schema": "Session",
+      "description": "User speech practice sessions"
+    }
+  }
+}
