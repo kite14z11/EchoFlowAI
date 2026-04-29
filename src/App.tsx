@@ -15,7 +15,8 @@ import {
   XCircle,
   HelpCircle,
   Volume2,
-  Trash2
+  Trash2,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -330,6 +331,45 @@ export default function App() {
     }
   };
 
+  const downloadSession = (e: React.MouseEvent, session: PracticeSession) => {
+    e.stopPropagation();
+    const practiceItemsSection = session.practiceItems && session.practiceItems.length > 0
+      ? `\n## Practice Items\n\n${session.practiceItems.map(item =>
+          `- **${item.text}** (${item.type}): ${item.reason}${item.latestScore !== undefined ? ` — Score: ${item.latestScore}` : ''}`
+        ).join('\n')}`
+      : '';
+
+    const markdown = `# ${session.title}
+
+**Date:** ${format(new Date(session.date), 'MMMM dd, yyyy, h:mm a')}
+**Score:** ${session.score}%
+**Voice:** ${session.voiceSettings.voiceName} / ${session.voiceSettings.tone}
+
+---
+
+## Script
+
+${session.originalText}
+
+## Your Speech (Transcript)
+
+${session.transcript}
+
+## Feedback
+
+${session.feedback}
+${practiceItemsSection}
+`;
+
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${session.title.replace(/[^a-zA-Z0-9\u3040-\u30ff\u4e00-\u9fff]/g, '_')}_${format(new Date(session.date), 'yyyyMMdd')}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const deletePracticeItem = (index: number) => {
     if (!confirm("Remove this item from the Lab?")) return;
     setPracticeItems(prev => prev.filter((_, i) => i !== index));
@@ -449,7 +489,7 @@ export default function App() {
                 <div className="space-y-1 pr-10">
                   {history.map(session => (
                     <div key={session.id} className="group relative">
-                      <button 
+                      <button
                         onClick={() => {
                           setInputText(session.originalText);
                           setTranscript(session.transcript);
@@ -460,18 +500,27 @@ export default function App() {
                           setTitle(session.title);
                           setActiveTab('practice');
                         }}
-                        className="w-full text-left p-3 rounded-xl hover:bg-[#f8fafc] transition-all pr-10"
+                        className="w-full text-left p-3 rounded-xl hover:bg-[#f8fafc] transition-all pr-16"
                       >
                         <div className="text-[10px] text-[#64748b] mb-1">{format(new Date(session.date), 'MMM dd, h:mm a')}</div>
                         <div className="text-sm font-semibold truncate group-hover:text-[#3b82f6]">{session.title}</div>
                       </button>
-                      <button 
-                        onClick={(e) => session.id && deleteSession(e, session.id)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-[#cbd5e1] hover:text-[#ef4444] opacity-0 group-hover:opacity-100 transition-all"
-                        title="Delete Session"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+                        <button
+                          onClick={(e) => downloadSession(e, session)}
+                          className="p-2 text-[#cbd5e1] hover:text-[#3b82f6] transition-colors"
+                          title="Download as Markdown"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => session.id && deleteSession(e, session.id)}
+                          className="p-2 text-[#cbd5e1] hover:text-[#ef4444] transition-colors"
+                          title="Delete Session"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                   {history.length === 0 && (
@@ -817,8 +866,26 @@ export default function App() {
                         </div>
                       </div>
                       <p className="text-xs text-[#64748b] line-clamp-2 leading-relaxed italic mb-4">"{session.originalText}"</p>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-[#3b82f6] uppercase">
-                        Review Session <ChevronRight className="w-3 h-3" />
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-[#3b82f6] uppercase">
+                          Review Session <ChevronRight className="w-3 h-3" />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => downloadSession(e, session)}
+                            className="p-2 text-[#cbd5e1] hover:text-[#3b82f6] transition-colors rounded-lg hover:bg-blue-50"
+                            title="Download as Markdown"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => session.id && deleteSession(e, session.id)}
+                            className="p-2 text-[#cbd5e1] hover:text-[#ef4444] transition-colors rounded-lg hover:bg-red-50"
+                            title="Delete Session"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
